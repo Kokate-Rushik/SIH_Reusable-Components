@@ -4,12 +4,33 @@ export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
 
 export type SeverityLevel = 'Critical' | 'High' | 'Moderate' | 'Low';
 
+export type LSRStatus = 'BREACHED' | 'AT_RISK' | 'COMPLIANT' | 'NOT_APPLICABLE';
+
+export interface LifeSavingRule {
+  id: string;
+  ruleCode: string;
+  name: string;
+  category: string;
+  description: string;
+  status: LSRStatus;
+  criticalBarrier: string;
+  deviationObserved: string;
+  mitigationAction: string;
+  riskScore: number;
+}
+
 export interface EvidenceItem {
   id: string;
   sourceSection: string;
   textExcerpt: string;
   relevanceNote: string;
   confidenceScore: number;
+  categoryTag?: string;
+  pageNumber?: number;
+  lineNumber?: number;
+  contextBefore?: string;
+  highlightedPhrase?: string;
+  contextAfter?: string;
 }
 
 export interface ConfidenceFactor {
@@ -55,9 +76,11 @@ export interface SIFAnalysisResult {
   summary: string;
   detailedRationale: string;
   recommendedControls: string[];
+  lifeSavingRules: LifeSavingRule[];
   confidence: ConfidenceAssessment;
   evidence: EvidenceItem[];
   extractedFields: ExtractedIncidentFields;
+  fullIncidentText?: string;
   processingMetadata: {
     latencyMs: number;
     tokensEvaluated: number;
@@ -75,3 +98,4 @@ export interface UploadResponse {
   mimeType: string;
   analysis?: SIFAnalysisResult;
 }
+

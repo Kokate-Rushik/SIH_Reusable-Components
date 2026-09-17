@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   BarChart,
   Bar,
@@ -13,9 +14,12 @@ import { MetricCard } from '../components/ui/MetricCard';
 import { DataTable, type Column } from '../components/ui/DataTable';
 import { ChartContainer } from '../components/ui/ChartContainer';
 import { SIFResultCard } from '../components/analysis/SIFResultCard';
+import { LifeSavingRulesSection } from '../components/analysis/LifeSavingRulesSection';
+import { EvidenceSnippetsCard } from '../components/analysis/EvidenceSnippetsCard';
 import { ConfidenceEvidenceDisplay } from '../components/analysis/ConfidenceEvidenceDisplay';
 import { ExtractedFieldsContainer } from '../components/analysis/ExtractedFieldsContainer';
 import { sampleAnalysisReports } from '../services/sampleData';
+import { SIFAnalysisResult } from '../types/analysis';
 import {
   FileSpreadsheet,
   PieChart,
@@ -151,21 +155,36 @@ const analysisColumns: Column<AnalysisReportRow>[] = [
 ];
 
 export const ReportAnalysisPage: React.FC = () => {
+  const location = useLocation();
+  const [reportsList, setReportsList] = useState<SIFAnalysisResult[]>(sampleAnalysisReports);
   const [selectedReportId, setSelectedReportId] = useState<string>(sampleAnalysisReports[0].id);
 
+  useEffect(() => {
+    const passedAnalysis = location.state?.analysis as SIFAnalysisResult | undefined;
+    if (passedAnalysis) {
+      setReportsList((prev) => {
+        if (prev.some((r) => r.id === passedAnalysis.id)) {
+          return prev;
+        }
+        return [passedAnalysis, ...prev];
+      });
+      setSelectedReportId(passedAnalysis.id);
+    }
+  }, [location.state]);
+
   const activeReport =
-    sampleAnalysisReports.find((r) => r.id === selectedReportId) || sampleAnalysisReports[0];
+    reportsList.find((r) => r.id === selectedReportId) || reportsList[0];
 
   return (
     <div className="space-y-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             Incident Analysis & SIF Assessment
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Automated Serious Injury or Fatality (SIF) determination, documentary evidence grounding, and entity extraction.
+            Automated Serious Injury or Fatality (SIF) determination, Life-Saving Rules (LSR) audit, and grounded evidence extraction.
           </p>
         </div>
 
@@ -178,9 +197,9 @@ export const ReportAnalysisPage: React.FC = () => {
             id="report-selector"
             value={selectedReportId}
             onChange={(e) => setSelectedReportId(e.target.value)}
-            className="bg-white border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-slate-500 shadow-xs"
+            className="bg-white border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-slate-500 shadow-xs max-w-[280px] sm:max-w-md truncate"
           >
-            {sampleAnalysisReports.map((report) => (
+            {reportsList.map((report) => (
               <option key={report.id} value={report.id}>
                 {report.id} — {report.reportName} ({report.sifClassification})
               </option>
@@ -189,7 +208,7 @@ export const ReportAnalysisPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Deliverable 2A: SIF Result Card Component */}
+      {/* SIF Result Card Component */}
       <section aria-label="SIF Result Classification">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -202,14 +221,47 @@ export const ReportAnalysisPage: React.FC = () => {
         <SIFResultCard analysis={activeReport} />
       </section>
 
-      {/* Deliverable 2B: Confidence & Evidence Display Container */}
-      <section aria-label="Confidence and Evidence Grounding">
+      {/* Day 3 Deliverable 2A: Life-Saving Rules (LSR) Protocol Audit */}
+      <section aria-label="Life-Saving Rules Audit">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Confidence & Documentary Evidence Grounding
+            Life-Saving Rules (LSR) Barrier Verification
           </h2>
           <span className="text-[11px] font-mono text-slate-500">
-            {activeReport.evidence.length} Cited Spans
+            {activeReport.lifeSavingRules.length} Rules Evaluated
+          </span>
+        </div>
+        <LifeSavingRulesSection
+          key={`lsr-${activeReport.id}`}
+          rules={activeReport.lifeSavingRules}
+        />
+      </section>
+
+      {/* Day 3 Deliverable 2B: Evidence Snippets & Grounding Component */}
+      <section aria-label="Evidence Snippets Grounding">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Documentary Evidence Snippets & Precursor Grounding
+          </h2>
+          <span className="text-[11px] font-mono text-slate-500">
+            {activeReport.evidence.length} Verifiable Citations
+          </span>
+        </div>
+        <EvidenceSnippetsCard
+          key={`ev-${activeReport.id}`}
+          evidence={activeReport.evidence}
+          fullIncidentText={activeReport.fullIncidentText}
+        />
+      </section>
+
+      {/* Confidence Assessment & Calibration Factor Breakdown */}
+      <section aria-label="Confidence and Calibration Breakdown">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Model Confidence Calibration & Weighted Factors
+          </h2>
+          <span className="text-[11px] font-mono text-slate-500">
+            Engine: {activeReport.confidence.modelEngine}
           </span>
         </div>
         <ConfidenceEvidenceDisplay
@@ -218,7 +270,7 @@ export const ReportAnalysisPage: React.FC = () => {
         />
       </section>
 
-      {/* Deliverable 2C: Extracted Fields Display Container */}
+      {/* Extracted Fields Display Container */}
       <section aria-label="Extracted Structured Incident Fields">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -229,7 +281,7 @@ export const ReportAnalysisPage: React.FC = () => {
           </span>
         </div>
         <ExtractedFieldsContainer
-          key={activeReport.id}
+          key={`fields-${activeReport.id}`}
           initialFields={activeReport.extractedFields}
         />
       </section>
@@ -371,3 +423,4 @@ export const ReportAnalysisPage: React.FC = () => {
     </div>
   );
 };
+

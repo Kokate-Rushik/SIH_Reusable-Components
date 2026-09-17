@@ -237,7 +237,7 @@ export const UploadPage: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => navigate('/analysis')}
+              onClick={() => navigate('/analysis', { state: { analysis: latestAnalysis } })}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 text-white rounded text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs shrink-0"
             >
               <span>View SIF Analysis Report</span>
