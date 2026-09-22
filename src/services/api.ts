@@ -1,4 +1,4 @@
-import { SIFAnalysisResult, UploadResponse } from '../types/analysis';
+import { SIFAnalysisResult, UploadResponse, ExtractedIncidentFields } from '../types/analysis';
 import { sampleAnalysisReports } from './sampleData';
 
 export const mockDefaultAnalysisResult: SIFAnalysisResult = sampleAnalysisReports[0];
@@ -7,6 +7,67 @@ export interface UploadOptions {
   sourceFormat?: string;
   partitionNamespace?: string;
   onProgress?: (progress: number) => void;
+}
+
+export interface DashboardMetricsResponse {
+  totalAudited: number;
+  sifPrecursorRate: string;
+  barrierIntegrityIndex: number;
+  openHSEActions: number;
+  lastUpdated: string;
+}
+
+/**
+ * Fetch all available SIF analysis reports
+ */
+export async function fetchAnalysisReports(): Promise<SIFAnalysisResult[]> {
+  // Simulate network latency for realistic async state verification
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  return [...sampleAnalysisReports];
+}
+
+/**
+ * Fetch single report by dossier ID
+ */
+export async function fetchAnalysisReportById(id: string): Promise<SIFAnalysisResult> {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const found = sampleAnalysisReports.find((r) => r.id === id);
+  if (!found) {
+    throw new Error(`Report dossier with identifier "${id}" could not be located on server.`);
+  }
+  return { ...found };
+}
+
+/**
+ * Update and persist verified extracted fields
+ */
+export async function updateReportFields(
+  reportId: string,
+  fields: ExtractedIncidentFields
+): Promise<{ success: boolean; message: string }> {
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  const target = sampleAnalysisReports.find((r) => r.id === reportId);
+  if (target) {
+    target.extractedFields = { ...fields };
+  }
+  return {
+    success: true,
+    message: `Incident variables for dossier ${reportId} successfully updated.`,
+  };
+}
+
+/**
+ * Fetch aggregate dashboard safety metrics
+ */
+export async function fetchDashboardMetrics(): Promise<DashboardMetricsResponse> {
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  return {
+    totalAudited: 22661,
+    sifPrecursorRate: '1.19%',
+    barrierIntegrityIndex: 0.94,
+    openHSEActions: 7,
+    lastUpdated: new Date().toISOString(),
+  };
 }
 
 /**
@@ -42,7 +103,7 @@ export async function uploadReportFile(
     }
 
     if (!response.ok) {
-      // If server responded with an HTTP error, check if we should format fallback mock analysis
+      // If server responded with an HTTP error, fallback to mock analysis
       throw new Error(`Upload failed with status code ${response.status}: ${response.statusText}`);
     }
 
@@ -96,4 +157,5 @@ export async function uploadReportFile(
     };
   }
 }
+
 
