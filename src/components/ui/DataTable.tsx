@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
+import { Inbox } from 'lucide-react';
 
 export interface Column<T> {
   key: string;
@@ -11,7 +12,7 @@ export interface Column<T> {
 
 export interface DataTableProps<T> {
   columns: Column<T>[];
-  data: T[];
+  data?: T[];
   keyExtractor?: (item: T, index: number) => string | number;
   emptyMessage?: string;
   className?: string;
@@ -19,22 +20,24 @@ export interface DataTableProps<T> {
 
 export function DataTable<T extends Record<string, any>>({
   columns,
-  data,
+  data = [],
   keyExtractor,
-  emptyMessage = 'No records found',
+  emptyMessage = 'No records found matching current criteria.',
   className,
 }: DataTableProps<T>) {
+  const safeData = Array.isArray(data) ? data : [];
+
   return (
-    <div className={cn('surface-card overflow-hidden', className)}>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+    <div className={cn('surface-card overflow-hidden w-full', className)}>
+      <div className="overflow-x-auto w-full scrollbar-thin">
+        <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-full">
           <thead>
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
-                    'table-header-cell',
+                    'table-header-cell whitespace-nowrap',
                     col.align === 'center' && 'text-center',
                     col.align === 'right' && 'text-right',
                     col.className
@@ -46,40 +49,48 @@ export function DataTable<T extends Record<string, any>>({
             </tr>
           </thead>
           <tbody>
-            {data.length === 0 ? (
+            {safeData.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="table-body-cell text-center py-8 text-slate-500 font-normal"
+                  className="table-body-cell text-center py-10 text-slate-500 font-normal"
                 >
-                  {emptyMessage}
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="h-8 w-8 rounded bg-slate-100 flex items-center justify-center text-slate-400">
+                      <Inbox className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs text-slate-600">{emptyMessage}</span>
+                  </div>
                 </td>
               </tr>
             ) : (
-              data.map((item, index) => {
+              safeData.map((item, index) => {
                 const key = keyExtractor ? keyExtractor(item, index) : index;
                 return (
                   <tr
                     key={key}
                     className="hover:bg-slate-50/75 transition-colors border-b border-slate-100 last:border-b-0"
                   >
-                    {columns.map((col) => (
-                      <td
-                        key={col.key}
-                        className={cn(
-                          'table-body-cell',
-                          col.align === 'center' && 'text-center',
-                          col.align === 'right' && 'text-right',
-                          col.className
-                        )}
-                      >
-                        {col.render
-                          ? col.render(item, index)
-                          : item[col.key] !== undefined
-                          ? String(item[col.key])
-                          : ''}
-                      </td>
-                    ))}
+                    {columns.map((col) => {
+                      const cellValue = item ? item[col.key] : undefined;
+                      return (
+                        <td
+                          key={col.key}
+                          className={cn(
+                            'table-body-cell',
+                            col.align === 'center' && 'text-center',
+                            col.align === 'right' && 'text-right',
+                            col.className
+                          )}
+                        >
+                          {col.render
+                            ? col.render(item, index)
+                            : cellValue !== undefined && cellValue !== null && cellValue !== ''
+                            ? String(cellValue)
+                            : <span className="text-slate-400 font-mono">—</span>}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })
@@ -90,3 +101,4 @@ export function DataTable<T extends Record<string, any>>({
     </div>
   );
 }
+

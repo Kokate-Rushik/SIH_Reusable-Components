@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, UploadCloud, BarChart3, Settings, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, UploadCloud, BarChart3, Settings, ShieldCheck, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface SidebarProps {
@@ -58,11 +58,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <aside
         className={cn(
-          'structural-sidebar fixed inset-y-0 left-0 z-40 w-64 pt-16 md:pt-0 flex flex-col justify-between transition-transform duration-200 ease-in-out md:static md:translate-x-0',
+          'structural-sidebar fixed inset-y-0 left-0 z-40 w-64 flex flex-col justify-between transition-transform duration-200 ease-in-out md:static md:translate-x-0 shadow-lg md:shadow-none bg-white',
           isOpenMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
         <div className="flex flex-col flex-1 px-3 py-4 space-y-6">
+          {/* Mobile-only header with close button */}
+          <div className="flex md:hidden items-center justify-between pb-3 border-b border-slate-200 px-2">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded bg-slate-900 text-white flex items-center justify-center font-bold text-xs tracking-tight">
+                SIH
+              </div>
+              <span className="font-semibold text-slate-900 text-xs">Workspace</span>
+            </div>
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              aria-label="Close sidebar"
+              className="p-1.5 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
           <div>
             <div className="px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               Core Modules

@@ -10,18 +10,20 @@ export interface EvidenceSnippetsCardProps {
 }
 
 export const EvidenceSnippetsCard: React.FC<EvidenceSnippetsCardProps> = ({
-  evidence,
+  evidence = [],
   fullIncidentText,
   className,
 }) => {
+  const safeEvidence = Array.isArray(evidence) ? evidence : [];
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string>(
-    evidence[0]?.id || ''
+    safeEvidence[0]?.id || ''
   );
   const [showFullContextModal, setShowFullContextModal] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const activeSnippet = evidence.find((e) => e.id === selectedEvidenceId) || evidence[0];
+  const activeSnippet =
+    safeEvidence.find((e) => e.id === selectedEvidenceId) || safeEvidence[0];
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
@@ -29,14 +31,14 @@ export const EvidenceSnippetsCard: React.FC<EvidenceSnippetsCardProps> = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const filteredEvidence = evidence.filter((item) => {
+  const filteredEvidence = safeEvidence.filter((item) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
-      item.id.toLowerCase().includes(query) ||
-      item.sourceSection.toLowerCase().includes(query) ||
-      item.textExcerpt.toLowerCase().includes(query) ||
-      item.relevanceNote.toLowerCase().includes(query) ||
+      item.id?.toLowerCase().includes(query) ||
+      item.sourceSection?.toLowerCase().includes(query) ||
+      item.textExcerpt?.toLowerCase().includes(query) ||
+      item.relevanceNote?.toLowerCase().includes(query) ||
       (item.categoryTag && item.categoryTag.toLowerCase().includes(query))
     );
   });
@@ -55,7 +57,7 @@ export const EvidenceSnippetsCard: React.FC<EvidenceSnippetsCardProps> = ({
     }
 
     // Default formatting if exact context chunks are not separated
-    return <span>{item.textExcerpt}</span>;
+    return <span>{item.textExcerpt || 'No excerpt available.'}</span>;
   };
 
   return (
@@ -111,47 +113,53 @@ export const EvidenceSnippetsCard: React.FC<EvidenceSnippetsCardProps> = ({
             <span>Match %</span>
           </div>
 
-          {filteredEvidence.map((item) => {
-            const isSelected = item.id === (activeSnippet?.id || '');
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setSelectedEvidenceId(item.id)}
-                className={cn(
-                  'w-full text-left p-3 rounded-md border transition-all space-y-1.5',
-                  isSelected
-                    ? 'bg-white border-slate-900 shadow-xs ring-1 ring-slate-900'
-                    : 'bg-white/80 border-slate-200 hover:border-slate-300 hover:bg-white'
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 border border-slate-200 rounded shrink-0">
-                      {item.id}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-800 truncate">
-                      {item.sourceSection}
+          {filteredEvidence.length === 0 ? (
+            <div className="p-6 text-center text-xs text-slate-500 bg-white border border-slate-200 rounded">
+              No citations matching &quot;{searchQuery}&quot;.
+            </div>
+          ) : (
+            filteredEvidence.map((item) => {
+              const isSelected = item.id === (activeSnippet?.id || '');
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSelectedEvidenceId(item.id)}
+                  className={cn(
+                    'w-full text-left p-3 rounded-md border transition-all space-y-1.5',
+                    isSelected
+                      ? 'bg-white border-slate-900 shadow-xs ring-1 ring-slate-900'
+                      : 'bg-white/80 border-slate-200 hover:border-slate-300 hover:bg-white'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 border border-slate-200 rounded shrink-0">
+                        {item.id}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-800 truncate">
+                        {item.sourceSection}
+                      </span>
+                    </div>
+
+                    <span className="font-mono text-[11px] text-slate-600 font-semibold shrink-0">
+                      {item.confidenceScore}%
                     </span>
                   </div>
 
-                  <span className="font-mono text-[11px] text-slate-600 font-semibold shrink-0">
-                    {item.confidenceScore}%
-                  </span>
-                </div>
+                  {item.categoryTag && (
+                    <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                      Tag: <span className="text-slate-800 font-medium">{item.categoryTag}</span>
+                    </div>
+                  )}
 
-                {item.categoryTag && (
-                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                    Tag: <span className="text-slate-800 font-medium">{item.categoryTag}</span>
-                  </div>
-                )}
-
-                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                  {item.textExcerpt.replace(/^["']|["']$/g, '')}
-                </p>
-              </button>
-            );
-          })}
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                    {item.textExcerpt ? item.textExcerpt.replace(/^["']|["']$/g, '') : 'No excerpt available.'}
+                  </p>
+                </button>
+              );
+            })
+          )}
         </div>
 
         {/* Right column: Active Snippet Detail & Grounding Inspector (7 cols) */}
