@@ -9,12 +9,13 @@ export interface LifeSavingRulesSectionProps {
 }
 
 export const LifeSavingRulesSection: React.FC<LifeSavingRulesSectionProps> = ({
-  rules,
+  rules = [],
   className,
 }) => {
+  const safeRules = Array.isArray(rules) ? rules : [];
   const [filter, setFilter] = useState<'ALL' | 'ACTIONABLE' | 'COMPLIANT'>('ALL');
 
-  const filteredRules = rules.filter((rule) => {
+  const filteredRules = safeRules.filter((rule) => {
     if (filter === 'ACTIONABLE') {
       return rule.status === 'BREACHED' || rule.status === 'AT_RISK';
     }
@@ -24,9 +25,9 @@ export const LifeSavingRulesSection: React.FC<LifeSavingRulesSectionProps> = ({
     return true;
   });
 
-  const breachedCount = rules.filter((r) => r.status === 'BREACHED').length;
-  const atRiskCount = rules.filter((r) => r.status === 'AT_RISK').length;
-  const compliantCount = rules.filter((r) => r.status === 'COMPLIANT').length;
+  const breachedCount = safeRules.filter((r) => r.status === 'BREACHED').length;
+  const atRiskCount = safeRules.filter((r) => r.status === 'AT_RISK').length;
+  const compliantCount = safeRules.filter((r) => r.status === 'COMPLIANT').length;
 
   const getStatusDisplay = (status: LSRStatus) => {
     switch (status) {

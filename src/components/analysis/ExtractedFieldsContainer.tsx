@@ -9,13 +9,31 @@ export interface ExtractedFieldsContainerProps {
   className?: string;
 }
 
+const defaultEmptyFields: ExtractedIncidentFields = {
+  incidentId: 'INC-UNASSIGNED',
+  incidentDateTime: '—',
+  facilityLocation: '—',
+  departmentOrUnit: '—',
+  eventType: '—',
+  injuryMechanism: '—',
+  injuredPersonnelRole: '—',
+  equipmentInvolved: '—',
+  ppeComplianceStatus: '—',
+  environmentalFactors: '—',
+  immediateCorrectiveActions: '—',
+  supervisoryFollowUp: '—',
+};
+
 export const ExtractedFieldsContainer: React.FC<ExtractedFieldsContainerProps> = ({
   initialFields,
   onSave,
   className,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [fields, setFields] = useState<ExtractedIncidentFields>(initialFields);
+  const [fields, setFields] = useState<ExtractedIncidentFields>({
+    ...defaultEmptyFields,
+    ...(initialFields || {}),
+  });
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleInputChange = (key: keyof ExtractedIncidentFields, value: string) => {
